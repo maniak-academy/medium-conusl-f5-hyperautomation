@@ -8,6 +8,7 @@ You will require the following access to make this lab work
 * AWS access 
 * Terraform Installed
 
+
 ## Deploy the demo environment using Terraform 
 
 The tutorial provides an example scenario that can be deployed on AWS using Terraform.
@@ -165,3 +166,11 @@ terraform destroy -auto-approve
 ```
 
 
+
+## NOTE on mac m1 users
+if you get this error, use docker to deploy the configuration
+```
+│ Provider registry.terraform.io/hashicorp/template v2.2.0 does not have a package available for your current platform, darwin_arm64.
+```
+
+docker-compose -f docker-compose.yml run --rm terraform init
