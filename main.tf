@@ -38,17 +38,17 @@ data "aws_ami" "ubuntu" {
 
 
 resource "local_file" "nia-config" {
-    content     = local.nia-config
-    filename    = "./cts-config/cts-consul.hcl"
+  content  = local.nia-config
+  filename = "./cts-config/cts-consul.hcl"
 }
 
 locals {
-    nia-config = templatefile("./cts-config/config.hcl.example", {
-    addr  = var.f5mgmtip
-    port  = "8443"
-    username  = "admin"
-    pwd = random_string.password.result
-    consul  = aws_instance.consul.private_ip
+  nia-config = templatefile("./cts-config/config.hcl.example", {
+    addr     = var.f5mgmtip
+    port     = "8443"
+    username = "admin"
+    pwd      = random_string.password.result
+    consul   = aws_instance.consul.private_ip
   })
 }
 
