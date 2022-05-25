@@ -36,19 +36,20 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-data "template_file" "nia" {
-  template = file("./cts-config/config.hcl.example")
-  vars = {
-    addr               = var.f5mgmtip
-    port               = "8443"
-    username           = "admin"
-    pwd                = random_string.password.result
-    consul             = aws_instance.consul.private_ip
-  }
-}
+
 resource "local_file" "nia-config" {
-  content  = data.template_file.nia.rendered
-  filename = "./cts-config/cts-consul.hcl"
+    content     = local.nia-config
+    filename    = "./cts-config/cts-consul.hcl"
+}
+
+locals {
+    nia-config = templatefile("./cts-config/config.hcl.example", {
+    addr  = var.f5mgmtip
+    port  = "8443"
+    username  = "admin"
+    pwd = random_string.password.result
+    consul  = aws_instance.consul.private_ip
+  })
 }
 
 

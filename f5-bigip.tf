@@ -8,21 +8,6 @@ resource "random_string" "password" {
 }
 
 
-resource "null_resource" "admin-shadow" {
-  provisioner "local-exec" {
-    command = "./admin-shadow.sh ${random_string.password.result}"
-  }
-}
-data "template_file" "f5_init" {
-  template = file("./scripts/f5.tpl")
-
-  vars = {
-    encrypted_password = chomp(file("admin.shadow"))
-  }
-  depends_on = [null_resource.admin-shadow]
-}
-
-
 module "bigip" {
   count                  = 1
   source                 = "F5Networks/bigip-module/aws"
@@ -34,5 +19,4 @@ module "bigip" {
   f5_password            = random_string.password.result
   mgmt_subnet_ids        = [{ "subnet_id" = module.vpc.public_subnets[0], "public_ip" = true, "private_ip_primary" = "${var.f5mgmtip}" }]
   mgmt_securitygroup_ids = [aws_security_group.f5.id]
-  custom_user_data       = data.template_file.f5_init.rendered
 }
