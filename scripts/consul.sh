@@ -100,7 +100,7 @@ sudo service consul status
 
 
 
-cat <<EOF > /opt/consul/cts_config.hcl
+cat <<EOF > /opt/consul/cts-config.hcl
 log_level = "INFO"
 port = 8558
 syslog {}

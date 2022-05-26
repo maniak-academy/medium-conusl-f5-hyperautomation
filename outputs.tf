@@ -8,7 +8,7 @@ output "F5_Password" {
 }
 
 output "F5_ssh" {
-  value = "ssh -i ${aws_key_pair.demo.key_name}.pem ${var.username}@${module.bigip.0.mgmtPublicIP}"
+  value = "ssh -i ${aws_key_pair.demo.key_name}.pem admin@${module.bigip.0.mgmtPublicIP}"
 }
 
 output "F5_UI" {

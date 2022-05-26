@@ -39,7 +39,7 @@ data "aws_ami" "ubuntu" {
 
 resource "local_file" "nia-config" {
   content  = local.nia-config
-  filename = "./cts-config/cts-consul.hcl"
+  filename = "./cts-config/cts-config.hcl"
 }
 
 locals {
