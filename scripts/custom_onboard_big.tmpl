@@ -13,7 +13,7 @@ exec 1>$npipe
 exec 2>&1
 
 # # create user
-# tmsh create auth user ${bigip_username} password ${bigip_password} shell tmsh partition-access replace-all-with { all-partitions { role admin } }
+#tmsh create auth user ${bigip_username} password ${bigip_password} shell tmsh partition-access replace-all-with { all-partitions { role admin } }
 
 # save config
 tmsh save sys config
@@ -27,12 +27,6 @@ runtime_parameters:
   - name: USER_NAME
     type: static
     value: ${bigip_username}
-  - name: HOST_NAME
-    type: metadata
-    metadataProvider:
-      environment: aws
-      type: compute
-      field: hostname
   - name: SSH_KEYS
     type: static
 EOF
@@ -54,19 +48,36 @@ else
   - name: ADMIN_PASS
     type: static
     value: ${bigip_password}
+EOF
+fi
+
+
+cat << 'EOF' > /config/custom-config.sh
+#!/bin/bash
+
+source /usr/lib/bigstart/bigip-ready-functions
+wait_bigip_ready
+
+tmsh modify /auth user admin password '${bigip_password}'
+tmsh modify auth user admin shell bash
+
+tmsh modify sys global-settings gui-setup disabled
+tmsh modify sys global-settings gui-security-banner-text "Check out more example at https://maniakacademy.medium.com/ "
+
+tmsh save sys config
+sleep 60
+bigstart restart restnoded
+EOF
+
+# Add remaining runtime_parameters:
+cat << 'EOF' >> /config/cloud/runtime-init-conf.yaml
 pre_onboard_enabled:
   - name: provision_rest
     type: inline
     commands:
       - /usr/bin/setdb provision.extramb 500
       - /usr/bin/setdb restjavad.useextramb true
-EOF
-fi
-
-cat /config/cloud/runtime-init-conf.yaml > /config/cloud/runtime-init-conf-backup.yaml
-
-# Add remaining runtime_parameters:
-cat << 'EOF' >> /config/cloud/runtime-init-conf.yaml
+      - /usr/bin/setdb setup.run false
 extension_packages:
   install_operations:
     - extensionType: do
@@ -75,12 +86,6 @@ extension_packages:
     - extensionType: as3
       extensionVersion: ${AS3_VER}
       extensionUrl: ${AS3_URL}
-    - extensionType: ts
-      extensionVersion: ${TS_VER}
-      extensionUrl: ${TS_URL}
-    - extensionType: cf
-      extensionVersion: ${CFE_VER}
-      extensionUrl: ${CFE_URL}
     - extensionType: fast
       extensionVersion: ${FAST_VER}
       extensionUrl: ${FAST_URL}
@@ -88,17 +93,12 @@ extension_services:
   service_operations:
     - extensionType: do
       type: url
-      value: https://raw.githubusercontent.com/F5Networks/terraform-aws-bigip-module/main/config/onboard_do.json
-post_onboard_enabled: []
-EOF
-
-cat << 'EOF' >> /config/cloud/runtime-init-conf-backup.yaml
-extension_services:
-  service_operations:
-    - extensionType: do
-      type: url
-      value: https://raw.githubusercontent.com/F5Networks/terraform-aws-bigip-module/main/config/onboard_wo_admin.json
-post_onboard_enabled: []
+      value: https://raw.githubusercontent.com/f5devcentral/terraform-aws-bigip-module/master/config/onboard_do.json
+post_onboard_enabled:
+    - name: custom-config
+      type: inline
+      commands:
+        - bash /config/custom-config.sh
 EOF
 
 
@@ -113,7 +113,3 @@ bash /var/config/rest/downloads/f5-bigip-runtime-init.gz.run -- '--cloud aws'
 # Run
 # export F5_BIGIP_RUNTIME_INIT_LOG_LEVEL=silly
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
-
-sleep 5
-
-f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf-backup.yaml

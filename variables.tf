@@ -11,7 +11,9 @@ variable "f5mgmtip" {
   default     = "10.0.0.200"
 }
 
-
+variable "f5_password" {
+  description = "F5 username"
+}
 
 variable "f5_username" {
   description = "F5 username"
